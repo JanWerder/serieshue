@@ -1,0 +1,15 @@
+@page "{Tcode?}"
+@model serieshue.IndexModel
+
+@{
+    Layout = "_Layout";
+}
+<div class="row p-4 p-md-5 mb-4 rounded text-bg-dark">
+    <div class="rounded ship-hero-inside">
+        <div class="col-md-12 px-0">
+            <h1 class="display-4 fst-italic">@Model.Title.PrimaryTitle</h1>
+            <small>@Model.Title.StartYear - @Model.Title.EndYear</small>
+            <p class="lead my-3">@Model.Title.Genres</p>
+        </div>
+    </div>
+</div>

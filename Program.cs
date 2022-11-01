@@ -5,6 +5,7 @@ using Hangfire.Dashboard;
 using serieshue.Interfaces;
 using serieshue.Models;
 using Microsoft.EntityFrameworkCore;
+using serieshue.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddEntityFrameworkNpgsql().AddDbContext<SeriesHueContext>(opt => opt.UseNpgsql(builder.Configuration["ConnectionStrings:DBConnection"]));
 builder.Services.AddHangfire(config => config.UsePostgreSqlStorage(builder.Configuration["ConnectionStrings:DBConnection"]));
 builder.Services.AddHangfireServer();
+
+builder.Services.AddScoped<ITaskRunnerService, TaskRunnerService>();
 
 var app = builder.Build();
 

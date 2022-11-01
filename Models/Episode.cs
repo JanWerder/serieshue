@@ -8,7 +8,7 @@ namespace serieshue.Models
         public virtual Title Title { get; set; }
 
         [Key]
-        public string TConst { get; set; }
+        public string Tconst { get; set; }
 
         [Display(Name = "Season Number")]
         public int SeasonNumber { get; set; }

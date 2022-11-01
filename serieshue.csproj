@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Hangfire" Version="1.7.31" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.9.9" />
+    <PackageReference Include="LinearTsvParser" Version="1.1.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.10">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
