@@ -6,6 +6,9 @@ using serieshue.Models;
 using System.Net;
 using LinearTsvParser;
 using System.IO.Compression;
+using System.Collections.Generic;
+using EFCore.BulkExtensions;
+using System.Globalization;
 
 namespace serieshue.Services;
 
@@ -36,6 +39,8 @@ public class TaskRunnerService : ITaskRunnerService
             var tsvReader = new TsvReader(ungzippedBasic);
             tsvReader.ReadLine();
 
+            Console.WriteLine("Reading basics...");
+
             while (!tsvReader.EndOfStream)
             {
                 List<string> fields = tsvReader.ReadLine();
@@ -50,7 +55,7 @@ public class TaskRunnerService : ITaskRunnerService
                     title.StartYear = fields[5] == "\\N" ? null : int.Parse(fields[5]);
                     title.EndYear = fields[6] == "\\N" ? null : int.Parse(fields[6]);
                     title.RuntimeMinutes = fields[7] == "\\N" ? null : int.Parse(fields[7]);
-                    title.Genres = fields[8];
+                    title.Genres = fields[8] == "\\N" ? null : fields[8];
 
                     titles.Add(title);
                 }
@@ -60,7 +65,7 @@ public class TaskRunnerService : ITaskRunnerService
                     episode.Tconst = fields[0];
                     episode.EpisodeTitle = fields[2];
                     episode.RuntimeMinutes = fields[7] == "\\N" ? null : int.Parse(fields[7]);
-                    episode.Genres = fields[8];
+                    episode.Genres = fields[8] == "\\N" ? null : fields[8];
 
                     episodeLookup.Add(episode);
                 }
@@ -69,13 +74,16 @@ public class TaskRunnerService : ITaskRunnerService
             using var ungzippedRatings = new GZipStream(ratingsStream, CompressionMode.Decompress);
             tsvReader = new TsvReader(ungzippedRatings);
             tsvReader.ReadLine();
+
+            Console.WriteLine("Reading ratings...");
+
             while (!tsvReader.EndOfStream)
             {
                 List<string> fields = tsvReader.ReadLine();
 
                 var rating = new RatingDAO();
                 rating.Tconst = fields[0];
-                rating.Rating = fields[1] == "\\N" ? 0 : float.Parse(fields[1]);
+                rating.Rating = fields[1] == "\\N" ? 0 : Double.Parse(fields[1], CultureInfo.InvariantCulture);
                 rating.Votes = fields[2] == "\\N" ? 0 : int.Parse(fields[2]);
 
                 ratingLookup.Add(rating);
@@ -84,42 +92,65 @@ public class TaskRunnerService : ITaskRunnerService
             using var ungzippedEpisodes = new GZipStream(episodeStream, CompressionMode.Decompress);
             tsvReader = new TsvReader(ungzippedEpisodes);
             tsvReader.ReadLine();
+
+            Console.WriteLine("Sorting Lookup Tables...");
+
+            ratingLookup.Sort(new RatingDAOComparer());
+            episodeLookup.Sort(new EpisodeDAOComparer());
+            titles.Sort(new TitleComparer());
+
+            Console.WriteLine("Reading episodes...");
+
             while (!tsvReader.EndOfStream)
             {
-                Console.Write(".");
                 List<string> fields = tsvReader.ReadLine();
 
                 var episode = new Episode();
 
-                var correspondingBasics = episodeLookup.Where(x => x.Tconst == fields[0]).FirstOrDefault();
-                var correspondingRating = ratingLookup.Where(x => x.Tconst == fields[0]).FirstOrDefault();
-
-                episode.Tconst = fields[0];
-                episode.EpisodeTitle = correspondingBasics.EpisodeTitle;
-                episode.RuntimeMinutes = correspondingBasics.RuntimeMinutes;
-                episode.Genres = correspondingBasics.Genres;
-
-                if (correspondingRating != null)
+                var ratingIndex = ratingLookup.BinarySearch(new RatingDAO() { Tconst = fields[0] }, new RatingDAOComparer());
+                if (ratingIndex >= 0)
                 {
+                    var correspondingRating = ratingLookup[ratingIndex];
                     episode.Rating = correspondingRating.Rating;
                     episode.Votes = correspondingRating.Votes;
                 }
 
-                var correspondingTitle = titles.Where(x => x.Tconst == fields[1]).FirstOrDefault();
-                if (correspondingTitle != null)
+                var basicIndex = episodeLookup.BinarySearch(new EpisodeDAO() { Tconst = fields[0] }, new EpisodeDAOComparer());
+                if (basicIndex >= 0)
                 {
+                    var correspondingBasics = episodeLookup[basicIndex];
+                    episode.EpisodeTitle = correspondingBasics.EpisodeTitle;
+                    episode.RuntimeMinutes = correspondingBasics.RuntimeMinutes;
+                    episode.Genres = correspondingBasics.Genres;
+                }
+
+                episode.Tconst = fields[0];
+                episode.SeasonNumber = fields[2] == "\\N" ? -1 : int.Parse(fields[2]);
+                episode.EpisodeNumber = fields[3] == "\\N" ? -1 : int.Parse(fields[3]);
+
+                if(episode.SeasonNumber == -1 || episode.EpisodeNumber == -1)
+                {
+                    continue;
+                }
+
+                var titleIndex = titles.BinarySearch(new Title() { Tconst = fields[1] }, new TitleComparer());
+                if (titleIndex >= 0)
+                {
+                    var correspondingTitle = titles[titleIndex];
                     episode.Title = correspondingTitle;
+                    episode.Title.Tconst = correspondingTitle.Tconst;
                     if (correspondingTitle.Episodes == null)
                     {
-                        titles[titles.IndexOf(correspondingTitle)].Episodes = new List<Episode>();
+                        correspondingTitle.Episodes = new List<Episode>();
                     }
-                    titles[titles.IndexOf(correspondingTitle)].Episodes.Add(episode);
+                    correspondingTitle.Episodes.Add(episode);
                 }
             }
 
-            //Truncate all Titles and Episodes and fill from titles and epsiode list
-            _context.Titles.RemoveRange(_context.Titles);
-            _context.Episodes.RemoveRange(_context.Episodes);
+            Console.WriteLine("Inserting titles & episodes...");
+
+            _context.Episodes.BatchDelete();
+            _context.Titles.BatchDelete();
             _context.Titles.AddRange(titles);
             _context.SaveChanges();
 
@@ -142,4 +173,27 @@ class RatingDAO
     public string Tconst { get; set; }
     public double Rating { get; set; }
     public int Votes { get; set; }
+}
+
+class EpisodeDAOComparer : IComparer<EpisodeDAO>
+{
+    public int Compare(EpisodeDAO x, EpisodeDAO y)
+    {
+        return x.Tconst.CompareTo(y.Tconst);
+    }
+}
+
+class RatingDAOComparer : IComparer<RatingDAO>
+{
+    public int Compare(RatingDAO x, RatingDAO y)
+    {
+        return x.Tconst.CompareTo(y.Tconst);
+    }
+}
+class TitleComparer : IComparer<Title>
+{
+    public int Compare(Title x, Title y)
+    {
+        return x.Tconst.CompareTo(y.Tconst);
+    }
 }

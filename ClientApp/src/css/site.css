@@ -1,0 +1,75 @@
+.rating {
+  text-decoration: none;
+  font-weight: lighter;
+}
+
+.great-scheme-1 {
+  background-color: #7ecf4c;
+}
+
+.great-scheme-1 a {
+  color: #000 !important;
+}
+
+.good-scheme-1 {
+  background-color: #f5e033 !important;
+}
+
+.good-scheme-1 a {
+  color: #000 !important;
+}
+
+.regular-scheme-1 {
+  background-color: #ffaa00 !important;
+}
+
+.regular-scheme-1 a {
+  color: #000 !important;
+}
+
+.bad-scheme-1 {
+  background-color: #c92913 !important;
+}
+
+.bad-scheme-1 a {
+  color: white !important;
+}
+
+.garbage-scheme-1 {
+  background-color: #49525e !important;
+}
+
+.garbage-scheme-1 a {
+  color: white !important;
+}
+
+.rating-td {
+  max-width: 3rem;
+  max-height: 3rem;
+  text-align: center;
+}
+
+.fit-content {
+  max-width: fit-content;
+}
+
+.caption-left {
+  writing-mode: tb-rl;
+  transform: rotate(-180deg);
+  margin-bottom: 25%;
+}
+
+td {
+  font-weight: bold;
+  border-width: 1px !important;
+  text-align: center;
+}
+
+th {
+  text-align: center !important;
+}
+
+.hovered {
+  background-color: black !important;
+  color: white !important;
+}

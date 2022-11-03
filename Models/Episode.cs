@@ -5,7 +5,7 @@ namespace serieshue.Models
 {
     public class Episode
     {
-        public virtual Title Title { get; set; }
+        public virtual Title Title { get; set; }        
 
         [Key]
         public string Tconst { get; set; }
@@ -17,7 +17,7 @@ namespace serieshue.Models
         public int EpisodeNumber { get; set; }
 
         [Display(Name = "Episode Title")]
-        public string EpisodeTitle { get; set; }
+        public string? EpisodeTitle { get; set; }
 
         [Display(Name = "Episode Rating")]
         public double? Rating { get; set; }
@@ -29,6 +29,6 @@ namespace serieshue.Models
         public int? RuntimeMinutes { get; set; }
 
         [Display(Name = "Episode Genres")]
-        public string Genres { get; set; }
+        public string? Genres { get; set; }
     }
 }

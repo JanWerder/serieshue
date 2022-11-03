@@ -40,3 +40,5 @@ appsettings.Development.json
 appsettings.json
 bin/
 obj/
+wwwroot/dist/
+ClientApp/node_modules/
