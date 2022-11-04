@@ -57,6 +57,11 @@ public class TaskRunnerService : ITaskRunnerService
                     title.RuntimeMinutes = fields[7] == "\\N" ? null : int.Parse(fields[7]);
                     title.Genres = fields[8] == "\\N" ? null : fields[8];
 
+                    if (title.Genres != null)
+                    {
+                        title.Genres = title.Genres.Replace(",", ", ");
+                    }
+
                     titles.Add(title);
                 }
                 else if (fields[1] == "tvEpisode")
@@ -66,6 +71,11 @@ public class TaskRunnerService : ITaskRunnerService
                     episode.EpisodeTitle = fields[2];
                     episode.RuntimeMinutes = fields[7] == "\\N" ? null : int.Parse(fields[7]);
                     episode.Genres = fields[8] == "\\N" ? null : fields[8];
+
+                    if (episode.Genres != null)
+                    {
+                        episode.Genres = episode.Genres.Replace(",", ", ");
+                    }
 
                     episodeLookup.Add(episode);
                 }
@@ -146,6 +156,8 @@ public class TaskRunnerService : ITaskRunnerService
                     correspondingTitle.Episodes.Add(episode);
                 }
             }
+
+            titles.RemoveAll(t => t.Episodes != null && t.Episodes.All(e => e.Rating == 0 || e.Rating == null));
 
             Console.WriteLine("Inserting titles & episodes...");
 

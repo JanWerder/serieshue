@@ -4,21 +4,19 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SeriesHue @ViewData["Title"]</title>
+    <title>Series Hue @ViewData["Title"]</title>
     <script src="~/dist/site.entry.js" defer></script>
     <link rel="stylesheet" href="~/dist/style.css" />
     <link rel="stylesheet" href="~/serieshue.styles.css" asp-append-version="true" />
 </head>
 
 <body>
-    <header>
-        <div class="text-center">
-            <h1 class="fw-bold">SeriesHue</h1>
-            @* <p class="fw-light">by Jan Werder</p> *@
-        </div>
-    </header>
     <div class="container">
-        <main role="main" class="pb-3">
+        <div class="text-center mb-4">
+            <h1 class="fw-bold fs-1 pt-3">Series Hue</h1>
+            <p class="fw-light">by <a href="https://twitter.com/jan_werder">&#64;JanWerder</a></p>
+        </div>
+        <main role="main" class="my-3">
             @RenderBody()
         </main>
     </div>

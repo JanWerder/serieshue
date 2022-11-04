@@ -4,7 +4,7 @@
 }
 
 .great-scheme-1 {
-  background-color: #7ecf4c;
+  background-color: #7ecf4c !important;
 }
 
 .great-scheme-1 a {
@@ -56,7 +56,7 @@
 .caption-left {
   writing-mode: tb-rl;
   transform: rotate(-180deg);
-  margin-bottom: 25%;
+  margin-bottom: 100%;
 }
 
 td {

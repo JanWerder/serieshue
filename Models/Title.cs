@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using NpgsqlTypes;
 
 namespace serieshue.Models
 {
@@ -32,5 +33,7 @@ namespace serieshue.Models
         [ValidateNever]
         [Display(Name = "Episodes")]
         public virtual IList<Episode> Episodes { get; set; }        
+
+        public NpgsqlTsVector SearchVector { get; set; }
     }
 }

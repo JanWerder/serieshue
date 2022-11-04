@@ -36,6 +36,8 @@ namespace serieshue
 
             SeasonCount = Title.Episodes.Select(e => e.SeasonNumber).Distinct().Count();
             EpisodeCount = Title.Episodes.Select(e => e.EpisodeNumber).Distinct().Count();
+
+            @ViewData["Title"] = " - " + Title.PrimaryTitle + " (" + Title.StartYear + ")";
         }
     }
 }

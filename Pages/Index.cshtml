@@ -4,9 +4,52 @@
     ViewData["Title"] = "";
 }
 
-<div class="text-center">
-    <input></input>
+<div class="row text-center justify-content-md-center ">
+    <div class="shadow-lg p-3 mb-5 bg-body rounded">
+        <p>Search for a TV series and get a heatmap of average IMDb ratings for each episode!</p>
+        <p>For example: <a asp-page="Title" asp-route-tcode="tt11198330">House of the Dragon</a>, <a asp-page="Title" asp-route-tcode="tt7631058">The Lord of the Rings: The Rings of Power</a>, <a asp-page="Title" asp-route-tcode="tt8772296">Euphoria</a>, <a asp-page="Title" asp-route-tcode="tt0056751">Doctor Who</a></p>
+    </div>
     <br>
-    <p>Search for a TV series and get a heatmap of average IMDb ratings for each episode!</p>
-    <p>For example: <a asp-page="Title" asp-route-tcode="tt11198330">House of the Dragon</a>, <a asp-page="Title" asp-route-tcode="tt7631058">The Lord of the Rings: The Rings of Power</a>, <a asp-page="Title" asp-route-tcode="tt8772296">Euphoria</a></p>
+    <div class="col-md-8 py-5 px-5 shadow-lg p-3 mb-5 bg-body rounded" x-data="search()">
+        <input type="search" class="form-control" placeholder="Enter Series here" x-model="searchValue" x-on:keyup="onSearchChange()"></input>
+        <ul class="list-group mt-2">
+            <template x-for="item in searchResults">
+                <a x-bind:href="'/Title/' +item.tcode">
+                    <li class="list-group-item" x-text="item.title"></li>
+                </a>
+            </template>
+        </ul>
+    </div>
 </div>
+
+<script>
+    var controller = null;
+
+    function search() {
+        return {
+            searchValue: "",
+            searchResults: [],
+            onSearchChange() {
+                if (this.searchValue.length >= 3) {
+                    if (controller) {
+                        controller.abort();
+                    }
+
+                    controller = new AbortController();
+                    const signal = controller.signal;
+                    fetch('/api/search?query=' + this.searchValue, {
+                        signal: signal
+                    })
+                        .then(response => response.json())
+                        .then(data => this.searchResults = data)
+                        .catch(e => {
+                            if (e.name === 'AbortError') {
+                            }
+                        });
+                } else if (this.searchValue.length == 0) {
+                    this.searchResults = [];
+                }
+            }
+        }
+    }
+</script>

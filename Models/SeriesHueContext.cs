@@ -12,6 +12,14 @@ namespace serieshue.Models
         {
             modelBuilder.Entity<Title>().HasMany(e => e.Episodes);
             modelBuilder.Entity<Episode>().HasOne(e => e.Title);
+
+            modelBuilder.Entity<Title>()
+            .HasGeneratedTsVectorColumn(
+                p => p.SearchVector,
+                "english",
+                p => new { p.PrimaryTitle, p.OriginalTitle })
+            .HasIndex(p => p.SearchVector)
+            .HasMethod("GIN");
         }
         #endregion
 
