@@ -8,10 +8,26 @@
 <div class="row">
     <div class="p-4 p-md-4 mb-4 rounded text-bg-dark col-md-12 shadow-lg">
         <div class="rounded ship-hero-inside">
-            <div class="col-md-12 px-0">
-                <h1 class="display-4 fst-italic">@Model.Title.PrimaryTitle</h1>
-                <small>@Model.Title.StartYear - @Model.Title.EndYear</small>
-                <p class="lead my-1">@Model.Title.Genres</p>
+            <div class="col-md-12 px-0 row">
+                <div class="col-lg-9">
+                    <span class="fst-italic">
+                        <span class="fs-1">@Model.Title.PrimaryTitle</span>
+                        @if (Model.Title.PrimaryTitle != Model.Title.OriginalTitle)
+                        {
+                            <small class="fst-italic">(@Model.Title.OriginalTitle)</small>
+                        }
+                    </span>
+                    <br>
+
+                    <small>@Model.Title.StartYear - @Model.Title.EndYear</small>
+                    <p class="lead my-1">@Model.Title.Genres</p>
+                </div>
+                <div class="col-lg-3"> @if (Model.Title.Rating != null)
+                    {
+                        <p class="float-end">@Model.Title.Rating (@Model.Title.Votes Votes)</p>
+                    }
+                </div>
+
             </div>
         </div>
     </div>

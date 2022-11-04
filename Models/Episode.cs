@@ -29,6 +29,6 @@ namespace serieshue.Models
         public int? RuntimeMinutes { get; set; }
 
         [Display(Name = "Episode Genres")]
-        public string? Genres { get; set; }
+        public String? Genres { get; set; }
     }
 }

@@ -35,8 +35,26 @@ public class TaskRunnerService : ITaskRunnerService
             var ratingsStream = new System.IO.MemoryStream(webClient.DownloadData("https://datasets.imdbws.com/title.ratings.tsv.gz"));
             var episodeStream = new System.IO.MemoryStream(webClient.DownloadData("https://datasets.imdbws.com/title.episode.tsv.gz"));
 
+            using var ungzippedRatings = new GZipStream(ratingsStream, CompressionMode.Decompress);
+            var tsvReader = new TsvReader(ungzippedRatings);
+            tsvReader.ReadLine();
+
+            Console.WriteLine("Reading ratings...");
+
+            while (!tsvReader.EndOfStream)
+            {
+                List<string> fields = tsvReader.ReadLine();
+
+                var rating = new RatingDAO();
+                rating.Tconst = fields[0];
+                rating.Rating = fields[1] == "\\N" ? 0 : Double.Parse(fields[1], CultureInfo.InvariantCulture);
+                rating.Votes = fields[2] == "\\N" ? 0 : int.Parse(fields[2]);
+
+                ratingLookup.Add(rating);
+            }
+
             using var ungzippedBasic = new GZipStream(basicStream, CompressionMode.Decompress);
-            var tsvReader = new TsvReader(ungzippedBasic);
+            tsvReader = new TsvReader(ungzippedBasic);
             tsvReader.ReadLine();
 
             Console.WriteLine("Reading basics...");
@@ -62,6 +80,14 @@ public class TaskRunnerService : ITaskRunnerService
                         title.Genres = title.Genres.Replace(",", ", ");
                     }
 
+                    var ratingIndex = ratingLookup.BinarySearch(new RatingDAO() { Tconst = fields[0] }, new RatingDAOComparer());
+                    if (ratingIndex >= 0)
+                    {
+                        var correspondingRating = ratingLookup[ratingIndex];
+                        title.Rating = correspondingRating.Rating;
+                        title.Votes = correspondingRating.Votes;
+                    }
+
                     titles.Add(title);
                 }
                 else if (fields[1] == "tvEpisode")
@@ -79,24 +105,6 @@ public class TaskRunnerService : ITaskRunnerService
 
                     episodeLookup.Add(episode);
                 }
-            }
-
-            using var ungzippedRatings = new GZipStream(ratingsStream, CompressionMode.Decompress);
-            tsvReader = new TsvReader(ungzippedRatings);
-            tsvReader.ReadLine();
-
-            Console.WriteLine("Reading ratings...");
-
-            while (!tsvReader.EndOfStream)
-            {
-                List<string> fields = tsvReader.ReadLine();
-
-                var rating = new RatingDAO();
-                rating.Tconst = fields[0];
-                rating.Rating = fields[1] == "\\N" ? 0 : Double.Parse(fields[1], CultureInfo.InvariantCulture);
-                rating.Votes = fields[2] == "\\N" ? 0 : int.Parse(fields[2]);
-
-                ratingLookup.Add(rating);
             }
 
             using var ungzippedEpisodes = new GZipStream(episodeStream, CompressionMode.Decompress);
@@ -138,7 +146,7 @@ public class TaskRunnerService : ITaskRunnerService
                 episode.SeasonNumber = fields[2] == "\\N" ? -1 : int.Parse(fields[2]);
                 episode.EpisodeNumber = fields[3] == "\\N" ? -1 : int.Parse(fields[3]);
 
-                if(episode.SeasonNumber == -1 || episode.EpisodeNumber == -1)
+                if (episode.SeasonNumber == -1 || episode.EpisodeNumber == -1)
                 {
                     continue;
                 }
@@ -158,6 +166,8 @@ public class TaskRunnerService : ITaskRunnerService
             }
 
             titles.RemoveAll(t => t.Episodes != null && t.Episodes.All(e => e.Rating == 0 || e.Rating == null));
+            titles.RemoveAll(t => t.Episodes != null && t.Episodes.All(e => e.EpisodeNumber == -1 && e.SeasonNumber == -1));
+            titles.RemoveAll(t => t.Episodes == null);
 
             Console.WriteLine("Inserting titles & episodes...");
 
@@ -177,7 +187,7 @@ class EpisodeDAO
     public string Tconst { get; set; }
     public string EpisodeTitle { get; set; }
     public int? RuntimeMinutes { get; set; }
-    public string Genres { get; set; }
+    public String? Genres { get; set; }
 }
 
 class RatingDAO

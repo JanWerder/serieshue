@@ -30,6 +30,12 @@ namespace serieshue.Models
         [Display(Name = "Genres")]
         public String? Genres { get; set; }
 
+        [Display(Name = "Title Rating")]
+        public double? Rating { get; set; }
+
+        [Display(Name = "Title Votes")]
+        public int? Votes { get; set; }
+
         [ValidateNever]
         [Display(Name = "Episodes")]
         public virtual IList<Episode> Episodes { get; set; }        

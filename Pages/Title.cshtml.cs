@@ -25,19 +25,33 @@ namespace serieshue
 
         public int SeasonCount { get; set; }
 
-        public async Task OnGetAsync(string Tcode)
+        public IActionResult OnGet(string Tcode)
         {
-            Title = await _context.Titles
+            Title = _context.Titles
                 .Include(t => t.Episodes)
                 .Where(t => t.Tconst == Tcode)
-                .FirstOrDefaultAsync();
+                .FirstOrDefault();
+
+            if (Title == null)
+            {
+                return new RedirectToPageResult("/Error");
+            }
 
             Title.Episodes = Title.Episodes.OrderBy(e => e.SeasonNumber).ThenBy(e => e.EpisodeNumber).ToList();
 
             SeasonCount = Title.Episodes.Select(e => e.SeasonNumber).Distinct().Count();
             EpisodeCount = Title.Episodes.Select(e => e.EpisodeNumber).Distinct().Count();
 
-            @ViewData["Title"] = " - " + Title.PrimaryTitle + " (" + Title.StartYear + ")";
+            if (Title.StartYear != null)
+            {
+                @ViewData["Title"] = " - " + Title.PrimaryTitle + " (" + Title.StartYear + ")";
+            }
+            else
+            {
+                @ViewData["Title"] = " - " + Title.PrimaryTitle;
+            }
+
+            return Page();
         }
     }
 }
