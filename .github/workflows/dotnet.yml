@@ -15,6 +15,12 @@ jobs:
         dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore
+    - name: Run NPM
+      shell: bash
+      run: |
+        cd ClientApp/
+        npm install
+        cd ..
     - name: Build
       run: dotnet build --no-restore
     - name: Test
