@@ -36,8 +36,8 @@ jobs:
         VERBOSE: true
         USER: ${{secrets.USER}}
         ARGS: -az --exclude=/.git/
-        SSH_ARGS: '-p 2222 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-        SOURCE: ./bin/Release/
+        SSH_ARGS: '-p 22 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+        SOURCE: ./bin/Release/net6.0/
         PRE_SCRIPT: |
           echo start at:
           date -u
