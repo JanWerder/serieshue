@@ -39,6 +39,16 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.Use((context, next) =>
+{
+    var pathBase = context.Request.Headers["X-Forwarded-PathBase"];
+    if ((String)pathBase != null)
+        context.Request.PathBase = new PathString(pathBase);
+    return next();
+});
+
+
 app.UseHangfireDashboard("/jobs");
 
 app.UseEndpoints(endpoints =>
@@ -50,7 +60,6 @@ app.UseEndpoints(endpoints =>
     // })
     // .RequireAuthorization(HangfirePolicyName);
 });
-
 
 RecurringJob.AddOrUpdate<ITaskRunnerService>("Update IMDB", x => x.RunIMDBUpdate(), Cron.Daily);
 

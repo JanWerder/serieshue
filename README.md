@@ -24,3 +24,11 @@ Update database schema:
 > dotnet ef migrations add InitialCreate --context SeriesHueContext
 > dotnet ef database update --context SeriesHueContext
 ```
+
+## Lessons learned to Production
+
+### Install pg_trgm
+
+sudo -u postgres psql --dbname=serieshue
+
+CREATE EXTENSION pg_trgm;
