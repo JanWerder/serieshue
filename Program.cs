@@ -39,18 +39,24 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 app.UseAuthorization();
 
 app.MapRazorPages();
-app.UseHangfireDashboard("/jobs");
+app.UseHangfireDashboard("/jobs", new DashboardOptions
+{
+    Authorization = new[] { new AlwaysOkAuthorizationFilter() }
+});
 
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
-    // endpoints.MapHangfireDashboard("/admin/jobs", new DashboardOptions()
-    // {
-    //     Authorization = new List<IDashboardAuthorizationFilter> { }
-    // })
-    // .RequireAuthorization(HangfirePolicyName);
 });
 
 RecurringJob.AddOrUpdate<ITaskRunnerService>("Update IMDB", x => x.RunIMDBUpdate(), Cron.Daily);
 
 app.Run();
+
+public class AlwaysOkAuthorizationFilter : IDashboardAuthorizationFilter
+{
+    public bool Authorize(DashboardContext context)
+    {
+        return true;
+    }
+}
