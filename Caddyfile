@@ -1,0 +1,21 @@
+{
+	order basicauth first
+	order route after basicauth
+	order uri after route
+	order reverse_proxy after uri
+}
+
+www.serieshue.app {
+	reverse_proxy localhost:5000
+}
+
+www.serieshue.app/jobs www.serieshue.app/jobs/** {
+	basicauth * {
+		admin base64password
+	}
+	reverse_proxy localhost:5000
+}
+
+serieshue.app {
+	redir https://www.serieshue.app{uri}
+}

@@ -1,0 +1,16 @@
+[Unit]
+Description=Running SeriesHue
+
+[Service]
+WorkingDirectory=/home/<user>/serieshue/publish
+ExecStart=dotnet /home/<user>/serieshue/publish/serieshue.dll
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=dotnet-example
+User=<user>
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target

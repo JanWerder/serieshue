@@ -23,12 +23,9 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // app.UseHttpsRedirection();
-    // app.UseHsts();
 }
 
 app.UseStaticFiles();
-
 app.UseRouting();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -37,7 +34,6 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseAuthorization();
-
 app.MapRazorPages();
 app.UseHangfireDashboard("/jobs", new DashboardOptions
 {
