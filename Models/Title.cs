@@ -39,7 +39,5 @@ namespace serieshue.Models
         [ValidateNever]
         [Display(Name = "Episodes")]
         public virtual IList<Episode> Episodes { get; set; }        
-
-        public NpgsqlTsVector SearchVector { get; set; }
     }
 }
