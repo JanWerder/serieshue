@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Collections.Generic;
 using EFCore.BulkExtensions;
 using System.Globalization;
+using System.Data.SqlClient;
 
 namespace serieshue.Services;
 
@@ -28,6 +29,7 @@ public class TaskRunnerService : ITaskRunnerService
         {
 
             var titles = new List<Title>();
+            var episodes = new List<Episode>();
             var episodeLookup = new List<EpisodeDAO>();
             var ratingLookup = new List<RatingDAO>();
 
@@ -111,7 +113,7 @@ public class TaskRunnerService : ITaskRunnerService
             tsvReader = new TsvReader(ungzippedEpisodes);
             tsvReader.ReadLine();
 
-            Console.WriteLine("Sorting Lookup Tables...");
+            Console.WriteLine("Sorting lookup tables...");
 
             ratingLookup.Sort(new RatingDAOComparer());
             episodeLookup.Sort(new EpisodeDAOComparer());
@@ -156,25 +158,32 @@ public class TaskRunnerService : ITaskRunnerService
                 {
                     var correspondingTitle = titles[titleIndex];
                     episode.Title = correspondingTitle;
-                    episode.Title.Tconst = correspondingTitle.Tconst;
+                    episode.TitleTconst = correspondingTitle.Tconst;
                     if (correspondingTitle.Episodes == null)
                     {
                         correspondingTitle.Episodes = new List<Episode>();
                     }
                     correspondingTitle.Episodes.Add(episode);
+                    episodes.Add(episode);
                 }
             }
+
+            Console.WriteLine("Removing wrong datasets...");
 
             titles.RemoveAll(t => t.Episodes != null && t.Episodes.All(e => e.Rating == 0 || e.Rating == null));
             titles.RemoveAll(t => t.Episodes != null && t.Episodes.All(e => e.EpisodeNumber == -1 && e.SeasonNumber == -1));
             titles.RemoveAll(t => t.Episodes == null);
+            episodes.RemoveAll(e => titles.BinarySearch(new Title() { Tconst = e.TitleTconst }, new TitleComparer()) < 0);
 
             Console.WriteLine("Inserting titles & episodes...");
 
             _context.Episodes.BatchDelete();
             _context.Titles.BatchDelete();
-            _context.Titles.AddRange(titles);
             _context.SaveChanges();
+            _context.BulkInsert(titles);
+            _context.BulkInsert(episodes);
+            _context.BulkSaveChanges();
+
 
             Console.WriteLine("Done.");
 

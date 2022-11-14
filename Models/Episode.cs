@@ -6,6 +6,7 @@ namespace serieshue.Models
     public class Episode
     {
         public virtual Title Title { get; set; }        
+        public string TitleTconst { get; set; }
 
         [Key]
         public string Tconst { get; set; }
