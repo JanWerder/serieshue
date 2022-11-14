@@ -5,9 +5,10 @@
 }
 
 <div class="row text-center justify-content-md-center ">
-    <div class="shadow-lg p-3 mb-5 bg-body rounded">
+    <div class="shadow-lg p-3 mb-5 bg-body rounded" x-data="statistics()">
         <p>Search for a TV series and get a heatmap of average IMDb ratings for each episode!</p>
-        <p>For example: <a asp-page="Title" asp-route-tcode="tt11198330">House of the Dragon</a>, <a asp-page="Title" asp-route-tcode="tt7631058">The Lord of the Rings: The Rings of Power</a>, <a asp-page="Title" asp-route-tcode="tt8772296">Euphoria</a>, <a asp-page="Title" asp-route-tcode="tt0056751">Doctor Who</a></p>
+        <p>For example: <a asp-page="Title" asp-route-tcode="tt11198330">House of the Dragon</a>, <a asp-page="Title" asp-route-tcode="tt7631058">The Lord of the Rings: The Rings of Power</a>, <a asp-page="Title" asp-route-tcode="tt8772296">Euphoria</a>, <a asp-page="Title" asp-route-tcode="tt0475784">Westworld</a>, <a asp-page="Title" asp-route-tcode="tt0436992">Doctor Who (2015)</a></p>
+        <p>Last updated the data at <span x-init="getLastUpdated()" x-text="lastUpdated"></span></p>
     </div>
     <br>
     <div class="col-md-8 py-5 px-5 shadow-lg p-3 mb-5 bg-body rounded" x-data="search()">
@@ -49,6 +50,17 @@
                 } else if (this.searchValue.length == 0) {
                     this.searchResults = [];
                 }
+            }
+        }
+    }
+
+    function statistics() {
+        return {
+            lastUpdated: "░░.░░.░░░░, ░░:░░:░░",
+            getLastUpdated() {
+                fetch('/api/lastUpdated')
+                    .then(response => response.json())
+                    .then(data => this.lastUpdated = new Date(data).toLocaleString())
             }
         }
     }

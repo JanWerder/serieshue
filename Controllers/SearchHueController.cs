@@ -10,6 +10,7 @@ using serieshue.Services;
 using serieshue.Interfaces;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
+using Hangfire.Storage.Monitoring;
 
 namespace marina_backend.Controllers
 {
@@ -33,6 +34,22 @@ namespace marina_backend.Controllers
             .ToList();
             var titlesDTO = titles.Select(t => new TitleDTO(t)).ToList();
             return titlesDTO;
+        }
+
+        [HttpGet("/api/lastUpdated")]
+        public ActionResult<DateTime> LastUpdated()
+        {
+            var MonitoringApi = Hangfire.JobStorage.Current.GetMonitoringApi();
+            KeyValuePair<string, SucceededJobDto> lastJob = MonitoringApi.SucceededJobs(0, 1).FirstOrDefault();
+            if (!lastJob.Equals(default(KeyValuePair<string, SucceededJobDto>)))
+            {
+                return lastJob.Value.SucceededAt;
+            }
+            else
+            {
+                return DateTime.MinValue;
+            }
+
         }
     }
 
