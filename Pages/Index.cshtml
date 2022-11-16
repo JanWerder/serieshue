@@ -25,7 +25,7 @@
     <div class="shadow-lg p-3 mb-5 bg-body rounded row" x-data="topSeries()" x-init="getTopSeries()">
         <p>The top 25 (so far) of this year</p>
         <template x-for="(item, i) in topSeries">
-            <p class="col-lg-6 lh-1">
+            <p class="col-lg-4 lh-1">
                 <a x-bind:href="'/Title/' +item.tcode" x-text="item.title"></a>
                 <span class="badge bg-primary rounded-pill" x-text="item.rating"></span>
             </p>

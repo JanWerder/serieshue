@@ -22,9 +22,12 @@
                     <small>@Model.Title.StartYear - @Model.Title.EndYear</small>
                     <p class="lead my-1">@Model.Title.Genres</p>
                 </div>
-                <div class="col-lg-3"> @if (Model.Title.Rating != null)
+                <div class="col-lg-3 py-3">
+                    <a href="https://www.imdb.com/title/@Model.Title.Tconst" class="btn btn-light float-end" target="_blank">IMDB</a>
+                    <br><br>
+                    @if (Model.Title.Rating != null)
                     {
-                        <p class="float-end">@Model.Title.Rating (@Model.Title.Votes Votes)</p>
+                        <p class="float-end">Rating: @Model.Title.Rating (@Model.Title.Votes Votes)</p>
                     }
                 </div>
 
