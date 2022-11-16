@@ -39,4 +39,8 @@ jobs:
         PRE_SCRIPT: |
           echo start at:
           date -u
-        POST_SCRIPT: "echo done at: && date -u"
+          sudo systemctl stop kestrel-serieshue.service
+        POST_SCRIPT: |
+          echo done at: 
+          date -u
+          sudo systemctl start kestrel-serieshue.service
