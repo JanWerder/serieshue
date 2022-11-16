@@ -51,16 +51,36 @@ namespace marina_backend.Controllers
             }
 
         }
+
+        [HttpGet("/api/topSeries/{year}")]
+        public ActionResult<IEnumerable<TitleDTO>> TopSeries(int year)
+        {
+            var avgVotesTitles = _context.Titles
+            .Where(t => t.StartYear == year)
+            .OrderByDescending(t => t.Rating)
+            .Average(t => t.Votes);
+
+            var titles = _context.Titles
+            .Where(t => t.StartYear == year)
+            .OrderByDescending(t => t.Rating)
+            .Where(t => t.Votes > avgVotesTitles)
+            .Take(25)
+            .ToList();
+            var titlesDTO = titles.Select(t => new TitleDTO(t)).ToList();
+            return titlesDTO;
+        }
     }
 
     public class TitleDTO
     {
         public string Tcode { get; set; }
         public string Title { get; set; }
+        public double? Rating { get; set; }
 
         public TitleDTO(Title title)
         {
             Tcode = title.Tconst;
+            Rating = title.Rating;
 
             if (title.StartYear != null)
             {

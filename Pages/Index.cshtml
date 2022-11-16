@@ -8,7 +8,7 @@
     <div class="shadow-lg p-3 mb-5 bg-body rounded" x-data="statistics()">
         <p>Search for a TV series and get a heatmap of average IMDb ratings for each episode!</p>
         <p>For example: <a asp-page="Title" asp-route-tcode="tt11198330">House of the Dragon</a>, <a asp-page="Title" asp-route-tcode="tt7631058">The Lord of the Rings: The Rings of Power</a>, <a asp-page="Title" asp-route-tcode="tt8772296">Euphoria</a>, <a asp-page="Title" asp-route-tcode="tt0475784">Westworld</a>, <a asp-page="Title" asp-route-tcode="tt0436992">Doctor Who (2015)</a></p>
-        <p>Last updated the data at <span x-init="getLastUpdated()" x-text="lastUpdated"></span></p>
+        <p>Last update at <span x-init="getLastUpdated()" x-text="lastUpdated"></span></p>
     </div>
     <br>
     <div class="col-md-8 py-5 px-5 shadow-lg p-3 mb-5 bg-body rounded" x-data="search()">
@@ -20,6 +20,16 @@
                 </a>
             </template>
         </ul>
+    </div>
+    <br>
+    <div class="shadow-lg p-3 mb-5 bg-body rounded row" x-data="topSeries()" x-init="getTopSeries()">
+        <p>The top 25 (so far) of this year</p>
+        <template x-for="(item, i) in topSeries">
+            <p class="col-lg-6 lh-1">
+                <a x-bind:href="'/Title/' +item.tcode" x-text="item.title"></a>
+                <span class="badge bg-primary rounded-pill" x-text="item.rating"></span>
+            </p>
+        </template>
     </div>
 </div>
 
@@ -61,6 +71,17 @@
                 fetch('/api/lastUpdated')
                     .then(response => response.json())
                     .then(data => this.lastUpdated = new Date(data).toLocaleString())
+            }
+        }
+    }
+
+    function topSeries() {
+        return {
+            topSeries: [],
+            getTopSeries() {
+                fetch('/api/topSeries/' + new Date().getFullYear())
+                    .then(response => response.json())
+                    .then(data => this.topSeries = data)
             }
         }
     }
