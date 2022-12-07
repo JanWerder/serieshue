@@ -12,7 +12,7 @@
     </div>
     <br>
     <div class="col-md-8 py-5 px-5 shadow-lg p-3 mb-5 bg-body rounded" x-data="search()">
-        <input type="search" class="form-control" placeholder="Enter Series here" x-model="searchValue" x-on:keyup="onSearchChange()"></input>
+        <input type="search" class="form-control" placeholder="Enter series here" x-model="searchValue" x-on:keyup="onSearchChange()"></input>
         <ul class="list-group mt-2">
             <template x-for="item in searchResults">
                 <a x-bind:href="'/Title/' +item.tcode">
@@ -25,9 +25,9 @@
     <div class="shadow-lg p-3 mb-5 bg-body rounded row" x-data="topSeries()" x-init="getTopSeries()">
         <p>The top 25 (so far) of this year</p>
         <template x-for="(item, i) in topSeries">
-            <p class="col-lg-4 lh-1">
-                <a x-bind:href="'/Title/' +item.tcode" x-text="item.title"></a>
+            <p class="col-lg-4 lh-1 text-start">
                 <span class="badge bg-primary rounded-pill" x-text="item.rating"></span>
+                <a x-bind:href="'/Title/' +item.tcode" x-text="item.title"></a>                
             </p>
         </template>
     </div>
