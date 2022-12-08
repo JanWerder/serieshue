@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using Hangfire.Storage.Monitoring;
 
-namespace marina_backend.Controllers
+namespace serieshue.Controllers
 {
     [ApiController]
     public class SeriesHueController : ControllerBase
