@@ -5,7 +5,7 @@
 @{
     Layout = "_Layout";
 }
-<div class="row">
+<div class="row" x-data="title()">
     <div class="p-4 p-md-4 mb-4 rounded text-bg-dark col-md-12 shadow-lg">
         <div class="rounded ship-hero-inside">
             <div class="col-md-12 px-0 row">
@@ -34,7 +34,30 @@
             </div>
         </div>
     </div>
-    <div class="position-relative d-flex justify-content-center">
+
+    <div class="position-relative d-flex justify-content-center mb-3">
+        <div class="card justify-content-center flex-row px-4 py-2 shadow-lg">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="swFlip" x-model="swFlip">
+                <label class="form-check-label" for="swFlip">Flip Seasons/Episodes</label>
+            </div>
+            <div class="legend">
+                <span>Legend: </span>
+                <span class="great-scheme-1 demo-box"></span>
+                <span>Great</span>
+                <span class="good-scheme-1 demo-box"></span>
+                <span>Good</span>
+                <span class="regular-scheme-1 demo-box"></span>
+                <span>Regular</span>
+                <span class="bad-scheme-1 demo-box"></span>
+                <span>Bad</span>
+                <span class="garbage-scheme-1 demo-box"></span>
+                <span>Garbage</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-relative d-flex justify-content-center" x-show.important="swFlip">
         <div class="card justify-content-center flex-row px-4 py-2 shadow-lg">
             <span class="caption-left">Episodes</span>
             <div class="table-responsive-sm fit-content">
@@ -79,28 +102,97 @@
             </div>
         </div>
     </div>
+    <div class="position-relative d-flex justify-content-center" x-show.important="!swFlip">
+        <div class="card justify-content-center flex-row px-4 py-2 shadow-lg">
+            <span class="caption-left">Seasons</span>
+            <div class="table-responsive-sm fit-content">
+                <div>
+                    <table class="table table-light table-responsive caption-top border-white">
+                        <caption class="text-center">Episodes</caption>
+                        <thead class="border-white">
+                            <tr class="border-white">
+                                <th scope="col"></th>
+                                @for (int i = 1; i <= Model.EpisodeCount; i++)
+                                {
+                                    <th scope="col">@i</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody class="border-white">
+                            @for (int j = 1; j <= Model.SeasonCount; j++)
+                            {
+                                <tr>
+                                    @for (int i = 0; i <= Model.EpisodeCount; i++)
+                                    {
+                                        @if (i == 0)
+                                        {
+                                            <td scope="row">@j</td>
+                                        }
+                                        else
+                                        {
+                                            Episode episode = Model.Title.Episodes.Where(x => x.EpisodeNumber == i && x.SeasonNumber == j).FirstOrDefault();
+                                            <td scope="row" data-rating="true" class="rating-td border-white">
+                                                @if (episode != null)
+                                                {
+                                                    <a class="rating" target="_blank" href="https://www.imdb.com/title/@episode.Tconst/">@episode.Rating</a>
+                                                }
+                                            </td>
+                                        }
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <script>
+    function addClass(ratingValue, rating, scheme) {
+        if (ratingValue > 8.5) {
+            rating[i].classList.add("great-scheme-" + scheme);
+        } else if (ratingValue >= 7.5) {
+            rating[i].classList.add("good-scheme-" + scheme);
+        } else if (ratingValue >= 6.5) {
+            rating[i].classList.add("regular-scheme-" + scheme);
+        } else if (ratingValue >= 5) {
+            rating[i].classList.add("bad-scheme-" + scheme);
+        } else if (ratingValue < 5) {
+            rating[i].classList.add("garbage-scheme-" + scheme);
+        }
+    }
+
+    function addHoverClass(e, table) {
+        var row = e.target.parentNode.parentNode;
+        var column = e.target.parentNode.cellIndex;
+
+        if (row.cells === undefined) {
+            return;
+        }
+
+        row.cells[0].classList.add('hovered');
+        table.rows[0].cells[column].classList.add('hovered');
+    }
+
+    function removeHoverClass(e, table) {
+        var row = e.target.parentNode.parentNode;
+        var column = e.target.parentNode.cellIndex;
+
+        if (row.cells === undefined) {
+            return;
+        }
+
+        row.cells[0].classList.remove('hovered');
+        table.rows[0].cells[column].classList.remove('hovered');
+    }
+
     var scheme = 1;
     var rating = document.querySelectorAll('[data-rating="true"]');
     for (var i = 0; i < rating.length; i++) {
         var ratingValue = parseFloat(rating[i].innerText.replace(/,/g, '.'));
         if (ratingValue != "") {
-            if (ratingValue > 8.5) {
-                rating[i].classList.add("great-scheme-" + scheme);
-            }
-            else if (ratingValue >= 7.5) {
-                rating[i].classList.add("good-scheme-" + scheme);
-            }
-            else if (ratingValue >= 6.5) {
-                rating[i].classList.add("regular-scheme-" + scheme);
-            }
-            else if (ratingValue >= 5) {
-                rating[i].classList.add("bad-scheme-" + scheme);
-            }
-            else if (ratingValue < 5) {
-                rating[i].classList.add("garbage-scheme-" + scheme);
-            }
+            addClass(ratingValue, rating, scheme);
         }
     }
 
@@ -108,26 +200,16 @@
     var cells = table.querySelectorAll('a');
     for (var i = 0; i < cells.length; i++) {
         cells[i].addEventListener('mouseover', function (e) {
-            var row = e.target.parentNode.parentNode;
-            var column = e.target.parentNode.cellIndex;
-
-            if (row.cells === undefined) {
-                return;
-            }
-
-            row.cells[0].classList.add('hovered');
-            table.rows[0].cells[column].classList.add('hovered');
+            addHoverClass(e, table);
         });
         cells[i].addEventListener('mouseout', function (e) {
-            var row = e.target.parentNode.parentNode;
-            var column = e.target.parentNode.cellIndex;
-
-            if (row.cells === undefined) {
-                return;
-            }
-
-            row.cells[0].classList.remove('hovered');
-            table.rows[0].cells[column].classList.remove('hovered');
+            removeHoverClass(e, table);
         });
+    }
+
+    function title() {
+        return {
+            swFlip: false,
+        }
     }
 </script>
