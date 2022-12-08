@@ -54,9 +54,13 @@
 }
 
 .caption-left {
-  writing-mode: tb-rl;
-  transform: rotate(-180deg);
-  margin-bottom: 100%;
+  writing-mode: vertical-rl;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 10em;
+  line-height: 2em;
+  rotate: 180deg;
 }
 
 td {
@@ -74,14 +78,10 @@ th {
   color: white !important;
 }
 
-.demo-box{
+.demo-box {
   display: block;
   width: 1.5rem;
   height: 1.5rem;
   margin-left: 0.5rem;
   margin-right: 0.5rem;
-}
-.legend{
-  display:flex;
-  margin-left: 1rem;
 }
