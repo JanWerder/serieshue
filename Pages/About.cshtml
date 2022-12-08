@@ -1,0 +1,21 @@
+﻿@page
+@model AboutModel
+@{
+    ViewData["Title"] = "";
+}
+
+<div class="row text-center justify-content-md-center">
+    <div class="shadow-lg p-3 mb-5 bg-body rounded col-lg-6 text-start">
+        <p>SeriesHue is an personal project to display the episode rating for any show listed on IMDB. This can help users discover the highs and lows of their favorite shows and see how they have evolved over time.</p>
+        <p>The project is spiritual successor to <a href="https://vallandingham.me/seriesheat/">SeriesHeat</a> by <a href="https://vallandingham.me/">Jim Vallandingham</a>. 
+        While his implementation was great in its own right, two drawbacks stood out for me to be improved upon:</p>
+        <ul>
+            <li>The dataset was old and wasn't being updated. Therefor more recent shows wouldn't appear.</li>
+            <li>The static hosting with sql.js was clever, but sadly very bandwidth consuming for the enduser. (Searching for Game of Thrones, would take about 30mb of data)</li>
+        </ul>
+        <p>I therefor decided to reimplement the services in aspnetcore and try to solve these issues.</p>
+        <p>Apart from that it uses the same <a href="https://www.imdb.com/interfaces/">IMDB datasets</a> as Jim's version.</p>
+        <p>As this is just a personal side project, I'll keep an eye if its being used and then decide on how long to keep this up. (Access logs only, no tracking)</p>
+        <p>If you are intersted in how this works, you check out the <a href="https://github.com/JanWerder/serieshue">Github repo</a>.</p>
+    </div>   
+</div>

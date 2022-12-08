@@ -1,5 +1,8 @@
 # SeriesHue
 
+This project uses asp.net core with entity framework core and postgresql. For more functionality on the frontend it additionally uses Alpine.js.
+Below are the steps to get the project running.
+
 ## Project setup
 
 1. Install the .NET Core SDK.
