@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using EFCore.BulkExtensions;
 using System.Globalization;
 using System.Data.SqlClient;
+using NSonic;
 
 namespace serieshue.Services;
 
@@ -18,9 +19,22 @@ public class TaskRunnerService : ITaskRunnerService
 
     private readonly SeriesHueContext _context;
 
-    public TaskRunnerService(SeriesHueContext context)
+    private readonly IConfiguration _configuration;
+
+    private string SonicHost;
+
+    private int SonicPort;
+
+    private string SonicSecret;
+
+    public TaskRunnerService(SeriesHueContext context, IConfiguration config)
     {
         _context = context;
+        _configuration = config;
+
+        SonicHost = _configuration.GetValue<string>("ConnectionStrings:SonicHost");
+        SonicPort = Int32.Parse(_configuration.GetValue<string>("ConnectionStrings:SonicPort"));
+        SonicSecret = _configuration.GetValue<string>("ConnectionStrings:SonicSecret");
     }
 
     public void RunIMDBUpdate()
@@ -183,6 +197,21 @@ public class TaskRunnerService : ITaskRunnerService
             _context.BulkInsert(titles);
             _context.BulkInsert(episodes);
             _context.BulkSaveChanges();
+
+            Console.WriteLine("Writing Search Index");
+
+            using (var ingest = NSonicFactory.Ingest(SonicHost, SonicPort, SonicSecret))
+            {
+                ingest.Connect();
+
+                var flushCollectionResult = ingest.FlushCollection("titles");
+                Console.WriteLine($"Flush of all titles: {flushCollectionResult}");
+
+                foreach (var title in titles)
+                {
+                    ingest.Push("titles", "generic", title.Tconst, title.PrimaryTitle.Replace("\"", "'"));
+                }
+            }
 
 
             Console.WriteLine("Done.");

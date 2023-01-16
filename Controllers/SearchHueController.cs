@@ -11,6 +11,7 @@ using serieshue.Interfaces;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using Hangfire.Storage.Monitoring;
+using NSonic;
 
 namespace serieshue.Controllers
 {
@@ -19,21 +20,42 @@ namespace serieshue.Controllers
     {
         private readonly SeriesHueContext _context;
 
-        public SeriesHueController(SeriesHueContext context)
+        private readonly IConfiguration _configuration;
+
+        private string SonicHost;
+
+        private int SonicPort;
+
+        private string SonicSecret;
+
+        public SeriesHueController(SeriesHueContext context, IConfiguration config)
         {
             _context = context;
+            _configuration = config;
+
+            SonicHost = _configuration.GetValue<string>("ConnectionStrings:SonicHost");
+            SonicPort = Int32.Parse(_configuration.GetValue<string>("ConnectionStrings:SonicPort"));
+            SonicSecret = _configuration.GetValue<string>("ConnectionStrings:SonicSecret");
         }
 
         [HttpGet("/api/search")]
         public ActionResult<IEnumerable<TitleDTO>> Search([FromQuery] string query)
         {
-            var titles = _context.Titles
-            .Where(t => EF.Functions.TrigramsWordSimilarity(t.PrimaryTitle, query) > 0.8)
-            .OrderByDescending(t => t.StartYear)
-            .Take(15)
-            .ToList();
-            var titlesDTO = titles.Select(t => new TitleDTO(t)).ToList();
-            return titlesDTO;
+            using (var search = NSonicFactory.Search(SonicHost, SonicPort, SonicSecret))
+            {
+                search.Connect();
+
+                string[] queryResults = search.Query("titles", "generic", query);
+                Console.WriteLine($"QUERY: {string.Join(", ", queryResults)}");
+
+                var titles = _context.Titles
+                .Where(t => queryResults.Contains(t.Tconst))
+                .OrderByDescending(t => t.StartYear)
+                .Take(15)
+                .ToList();
+                var titlesDTO = titles.Select(t => new TitleDTO(t)).ToList();
+                return titlesDTO;
+            }
         }
 
         [HttpGet("/api/lastUpdated")]
