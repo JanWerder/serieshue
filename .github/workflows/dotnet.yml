@@ -25,6 +25,10 @@ jobs:
       run: dotnet test --no-build --verbosity normal
     - name: Publish
       run: dotnet publish --configuration Release
+    - name: Delete everything except for publish
+      shell: bash
+      run: |
+        rm -r $(ls | grep -v "publish")
     - name: Deploy
       uses: up9cloud/action-rsync@v1.1
       env:
