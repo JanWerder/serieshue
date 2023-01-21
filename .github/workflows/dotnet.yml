@@ -28,6 +28,7 @@ jobs:
     - name: Delete everything except for publish
       shell: bash
       run: |
+        cd bin\Release\net6.0\
         rm -r $(ls | grep -v "publish")
     - name: Deploy
       uses: up9cloud/action-rsync@v1.1
