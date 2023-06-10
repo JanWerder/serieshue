@@ -11,6 +11,8 @@ using EFCore.BulkExtensions;
 using System.Globalization;
 using System.Data.SqlClient;
 using NSonic;
+using System.Text.Json;
+using Nager.Country;
 
 namespace serieshue.Services;
 
@@ -200,24 +202,103 @@ public class TaskRunnerService : ITaskRunnerService
 
             Console.WriteLine("Writing Search Index");
 
-            using (var ingest = NSonicFactory.Ingest(SonicHost, SonicPort, SonicSecret))
-            {
-                ingest.Connect();
+            // using (var ingest = NSonicFactory.Ingest(SonicHost, SonicPort, SonicSecret))
+            // {
+            //     ingest.Connect();
 
-                var flushCollectionResult = ingest.FlushCollection("titles");
-                Console.WriteLine($"Flush of all titles: {flushCollectionResult}");
+            //     var flushCollectionResult = ingest.FlushCollection("titles");
+            //     Console.WriteLine($"Flush of all titles: {flushCollectionResult}");
 
-                foreach (var title in titles)
-                {
-                    ingest.Push("titles", "generic", title.Tconst, title.PrimaryTitle.Replace("\"", "'"));
-                }
-            }
+            //     foreach (var title in titles)
+            //     {
+            //         ingest.Push("titles", "generic", title.Tconst, title.PrimaryTitle.Replace("\"", "'"));
+            //     }
+            // }
 
 
             Console.WriteLine("Done.");
 
+            var thisYear = DateTime.Now.Year;
+            var avgVotesTitles = _context.Titles
+            .Where(t => t.StartYear == thisYear)
+            .OrderByDescending(t => t.Rating)
+            .Average(t => t.Votes);
+
+            var topTitles = _context.Titles
+            .Where(t => t.StartYear == thisYear)
+            .OrderByDescending(t => t.Rating)
+            .Where(t => t.Votes > avgVotesTitles)
+            .Take(25)
+            .ToList();
+
+            foreach (var title in topTitles)
+            {
+                var additionalInfo = _context.AdditionalInfos.FirstOrDefault(ai => ai.Title.Tconst == title.Tconst);
+                if (additionalInfo == null)
+                {
+                    additionalInfo = retrieveAdditionalInfo(title.Tconst);
+                    _context.AdditionalInfos.Add(additionalInfo);
+                }
+            }
+
+            _context.SaveChanges();
         }
     }
+
+    private AdditionalInfo? retrieveAdditionalInfo(string tconst)
+    {
+        var api_key = _configuration.GetValue<string>("ConnectionStrings:IMDB-API-Key");
+
+        using (WebClient webClient = new WebClient())
+        {
+            var json = webClient.DownloadString($"https://imdb-api.com/en/API/Title/{api_key}/{tconst}");
+            var additionalInfoJson = JsonSerializer.Deserialize<AdditionalInfoJSON>(json);
+            AdditionalInfo additionalInfo = new AdditionalInfo();
+            additionalInfo.Title = _context.Titles.FirstOrDefault(t => t.Tconst == tconst);
+            additionalInfo.Plot = additionalInfoJson.plot;
+            additionalInfo.ImageURL = additionalInfoJson.image;
+            additionalInfo.Keywords = additionalInfoJson.keywords;
+            if (additionalInfoJson.countryList.Length > 0)
+            {
+                ICountryProvider countryProvider = new CountryProvider();
+                var countryName = additionalInfoJson.countryList[0].value;
+
+                var specialCases = new Dictionary<string, string>();
+                specialCases.Add("USA", "United States of America");
+                specialCases.Add("UK", "United Kingdom");
+
+                if (specialCases.ContainsKey(countryName))
+                {
+                    countryName = specialCases[countryName];
+                }
+
+                try
+                {
+                    var countryInfo = countryProvider.GetCountryByName(countryName);
+                    additionalInfo.Country = countryInfo.Alpha2Code.ToString();
+                }
+                catch (Exception)
+                {
+                    additionalInfo.Country = "";
+                }
+            }
+            return additionalInfo;
+        }
+    }
+}
+
+class AdditionalInfoJSON
+{
+    public string plot { get; set; }
+    public string image { get; set; }
+    public string keywords { get; set; }
+    public CountryListKeyValue[] countryList { get; set; }
+}
+
+class CountryListKeyValue
+{
+    public string key { get; set; }
+    public string value { get; set; }
 }
 
 class EpisodeDAO

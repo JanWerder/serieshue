@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using Hangfire.Storage.Monitoring;
 using NSonic;
+using System.Globalization;
 
 namespace serieshue.Controllers
 {
@@ -88,7 +89,7 @@ namespace serieshue.Controllers
             .Where(t => t.Votes > avgVotesTitles)
             .Take(25)
             .ToList();
-            var titlesDTO = titles.Select(t => new TitleDTO(t)).ToList();
+            var titlesDTO = titles.Select(t => new TitleDTO(t, _context.AdditionalInfos.FirstOrDefault(a => a.Title.Tconst == t.Tconst))).ToList();
             return titlesDTO;
         }
     }
@@ -99,8 +100,11 @@ namespace serieshue.Controllers
         public string Title { get; set; }
         public double? Rating { get; set; }
 
-        public TitleDTO(Title title)
+        public string countryCode { get; set; }
+
+        public TitleDTO(Title title, AdditionalInfo? additionalInfo = null)
         {
+
             Tcode = title.Tconst;
             Rating = title.Rating;
 
@@ -112,6 +116,14 @@ namespace serieshue.Controllers
             {
                 Title = title.PrimaryTitle;
             }
+
+            if (additionalInfo != null)
+            {
+                countryCode = additionalInfo.Country;
+            }
+
         }
     }
+
 }
+

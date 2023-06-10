@@ -21,6 +21,8 @@ namespace serieshue
 
         public Title Title { get; set; }
 
+        public AdditionalInfo AdditionalInfo { get; set; }
+
         public int EpisodeCount { get; set; }
 
         public int SeasonCount { get; set; }
@@ -36,6 +38,10 @@ namespace serieshue
             {
                 return new RedirectToPageResult("/Error");
             }
+
+            AdditionalInfo = _context.AdditionalInfos
+                .Where(a => a.Title.Tconst == Tcode)
+                .FirstOrDefault();
 
             Title.Episodes = Title.Episodes.OrderBy(e => e.SeasonNumber).ThenBy(e => e.EpisodeNumber).ToList();
 

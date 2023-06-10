@@ -27,7 +27,8 @@
         <template x-for="(item, i) in topSeries">
             <p class="col-lg-4 lh-1 text-start">
                 <span class="badge bg-primary rounded-pill" x-text="item.rating"></span>
-                <a x-bind:href="'/Title/' +item.tcode" x-text="item.title"></a>                
+                <img x-show="item.countryCode != null" class="country-flag" x-bind:alt="item.countryCode" x-bind:src="'https://purecatamphetamine.github.io/country-flag-icons/3x2/'+item.countryCode+'.svg'"></img>    
+                <a x-bind:href="'/Title/' +item.tcode" x-text="item.title"></a>                      
             </p>
         </template>
     </div>

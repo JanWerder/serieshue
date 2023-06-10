@@ -18,5 +18,7 @@ namespace serieshue.Models
         public DbSet<Title>? Titles { get; set; }
 
         public DbSet<Episode>? Episodes { get; set; }
+
+        public DbSet<AdditionalInfo>? AdditionalInfos { get; set; }
     }
 }

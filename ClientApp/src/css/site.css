@@ -85,3 +85,10 @@ th {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
+
+.country-flag{
+  width: 1.5rem;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  border: 1px solid black;
+}
