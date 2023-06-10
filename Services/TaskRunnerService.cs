@@ -202,18 +202,18 @@ public class TaskRunnerService : ITaskRunnerService
 
             Console.WriteLine("Writing Search Index");
 
-            // using (var ingest = NSonicFactory.Ingest(SonicHost, SonicPort, SonicSecret))
-            // {
-            //     ingest.Connect();
+            using (var ingest = NSonicFactory.Ingest(SonicHost, SonicPort, SonicSecret))
+            {
+                ingest.Connect();
 
-            //     var flushCollectionResult = ingest.FlushCollection("titles");
-            //     Console.WriteLine($"Flush of all titles: {flushCollectionResult}");
+                var flushCollectionResult = ingest.FlushCollection("titles");
+                Console.WriteLine($"Flush of all titles: {flushCollectionResult}");
 
-            //     foreach (var title in titles)
-            //     {
-            //         ingest.Push("titles", "generic", title.Tconst, title.PrimaryTitle.Replace("\"", "'"));
-            //     }
-            // }
+                foreach (var title in titles)
+                {
+                    ingest.Push("titles", "generic", title.Tconst, title.PrimaryTitle.Replace("\"", "'"));
+                }
+            }
 
 
             Console.WriteLine("Done.");
