@@ -12,7 +12,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Run NPM
@@ -28,7 +28,7 @@ jobs:
     - name: Delete everything except for publish
       shell: bash
       run: |
-        cd bin/Release/net6.0/
+        cd bin/Release/net7.0/
         rm -r $(ls | grep -v "publish")
     - name: Deploy
       uses: up9cloud/action-rsync@v1.1
@@ -40,7 +40,7 @@ jobs:
         USER: ${{secrets.USER}}
         ARGS: -az --exclude=/.git/
         SSH_ARGS: '-p 22 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-        SOURCE: ./bin/Release/net6.0/
+        SOURCE: ./bin/Release/net7.0/
         PRE_SCRIPT: |
           echo start at:
           date -u
