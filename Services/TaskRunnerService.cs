@@ -276,26 +276,7 @@ public class TaskRunnerService : ITaskRunnerService
                 if (additionalInfoJson.releaseDetailed.originLocations.Length > 0)
                 {
                     ICountryProvider countryProvider = new CountryProvider();
-                    var countryName = additionalInfoJson.releaseDetailed.originLocations[0].cca2;
-
-                    var specialCases = new Dictionary<string, string>();
-                    specialCases.Add("USA", "United States of America");
-                    specialCases.Add("UK", "United Kingdom");
-
-                    if (specialCases.ContainsKey(countryName))
-                    {
-                        countryName = specialCases[countryName];
-                    }
-
-                    try
-                    {
-                        var countryInfo = countryProvider.GetCountryByName(countryName);
-                        additionalInfo.Country = countryInfo.Alpha2Code.ToString();
-                    }
-                    catch (Exception)
-                    {
-                        additionalInfo.Country = "";
-                    }
+                    additionalInfo.Country = additionalInfoJson.releaseDetailed.originLocations[0].cca2;
                 }
                 return additionalInfo;
             }
