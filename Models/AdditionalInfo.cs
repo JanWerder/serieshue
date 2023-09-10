@@ -15,8 +15,6 @@ namespace serieshue.Models
 
         public string Country { get; set; }
 
-        public string Keywords { get; set; }
-
         public string Plot { get; set; }
     }
 }

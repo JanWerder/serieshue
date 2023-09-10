@@ -279,7 +279,6 @@ public class TaskRunnerService : ITaskRunnerService
                 additionalInfo.Title = _context.Titles.FirstOrDefault(t => t.Tconst == tconst);
                 additionalInfo.Plot = additionalInfoJson.plot;
                 additionalInfo.ImageURL = additionalInfoJson.image;
-                additionalInfo.Keywords = additionalInfoJson.keywords;
                 if (additionalInfoJson.releaseDetailed.originLocations.Length > 0)
                 {
                     ICountryProvider countryProvider = new CountryProvider();
@@ -319,7 +318,6 @@ class AdditionalInfoJSON
 {
     public string plot { get; set; }
     public string image { get; set; }
-    public string keywords { get; set; }
     public ReleaseDetailed releaseDetailed { get; set; }
 
     public string errorMessage { get; set; }
