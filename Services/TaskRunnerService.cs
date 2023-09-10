@@ -237,7 +237,10 @@ public class TaskRunnerService : ITaskRunnerService
                 if (additionalInfo == null)
                 {
                     additionalInfo = retrieveAdditionalInfo(title.Tconst);
-                    _context.AdditionalInfos.Add(additionalInfo);
+                    if (additionalInfo != null)
+                    {
+                        _context.AdditionalInfos.Add(additionalInfo);
+                    }
                 }
             }
 
@@ -253,6 +256,13 @@ public class TaskRunnerService : ITaskRunnerService
         {
             var json = webClient.DownloadString($"https://imdb-api.com/en/API/Title/{api_key}/{tconst}");
             var additionalInfoJson = JsonSerializer.Deserialize<AdditionalInfoJSON>(json);
+
+            if (additionalInfoJson.errorMessage != null)
+            {
+                Debug.WriteLine(additionalInfoJson.errorMessage);
+                return null;
+            }
+
             AdditionalInfo additionalInfo = new AdditionalInfo();
             additionalInfo.Title = _context.Titles.FirstOrDefault(t => t.Tconst == tconst);
             additionalInfo.Plot = additionalInfoJson.plot;
@@ -293,6 +303,8 @@ class AdditionalInfoJSON
     public string image { get; set; }
     public string keywords { get; set; }
     public CountryListKeyValue[] countryList { get; set; }
+
+    public string errorMessage { get; set; }
 }
 
 class CountryListKeyValue
