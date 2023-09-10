@@ -13,6 +13,7 @@ using System.Data.SqlClient;
 using NSonic;
 using System.Text.Json;
 using Nager.Country;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace serieshue.Services;
 
@@ -236,11 +237,12 @@ public class TaskRunnerService : ITaskRunnerService
             .Where(t => t.StartYear == thisYear)
             .OrderByDescending(t => t.Rating)
             .Where(t => t.Votes > avgVotesTitles)
-            .Take(25)
+            .Where(t => !_context.AdditionalInfos.All(ai => ai.Title.Tconst == t.Tconst))
             .ToList();
 
-            foreach (var title in topTitles)
+            for (int i = 0; i < 25; i++)
             {
+                var title = topTitles[i];
                 var additionalInfo = _context.AdditionalInfos.FirstOrDefault(ai => ai.Title.Tconst == title.Tconst);
                 if (additionalInfo == null)
                 {
