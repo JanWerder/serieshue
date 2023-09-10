@@ -269,12 +269,6 @@ public class TaskRunnerService : ITaskRunnerService
 
                 var additionalInfoJson = JsonSerializer.Deserialize<AdditionalInfoJSON>(json);
 
-                if (additionalInfoJson.errorMessage != null)
-                {
-                    Debug.WriteLine(additionalInfoJson.errorMessage);
-                    return null;
-                }
-
                 AdditionalInfo additionalInfo = new AdditionalInfo();
                 additionalInfo.Title = _context.Titles.FirstOrDefault(t => t.Tconst == tconst);
                 additionalInfo.Plot = additionalInfoJson.plot;
@@ -319,8 +313,6 @@ class AdditionalInfoJSON
     public string plot { get; set; }
     public string image { get; set; }
     public ReleaseDetailed releaseDetailed { get; set; }
-
-    public string errorMessage { get; set; }
 }
 
 public class ReleaseDetailed
