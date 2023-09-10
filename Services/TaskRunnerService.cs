@@ -43,6 +43,7 @@ public class TaskRunnerService : ITaskRunnerService
     {
         using (WebClient webClient = new WebClient())
         {
+            var startTime = DateTime.Now;
 
             var titles = new List<Title>();
             var episodes = new List<Episode>();
@@ -57,7 +58,7 @@ public class TaskRunnerService : ITaskRunnerService
             var tsvReader = new TsvReader(ungzippedRatings);
             tsvReader.ReadLine();
 
-            Console.WriteLine("Reading ratings...");
+            Console.WriteLine("Reading ratings... {0}s", (DateTime.Now - startTime).TotalSeconds);
 
             while (!tsvReader.EndOfStream)
             {
@@ -75,7 +76,7 @@ public class TaskRunnerService : ITaskRunnerService
             tsvReader = new TsvReader(ungzippedBasic);
             tsvReader.ReadLine();
 
-            Console.WriteLine("Reading basics...");
+            Console.WriteLine("Reading basics... {0}s", (DateTime.Now - startTime).TotalSeconds);
 
             while (!tsvReader.EndOfStream)
             {
@@ -129,13 +130,13 @@ public class TaskRunnerService : ITaskRunnerService
             tsvReader = new TsvReader(ungzippedEpisodes);
             tsvReader.ReadLine();
 
-            Console.WriteLine("Sorting lookup tables...");
+            Console.WriteLine("Sorting lookup tables... {0}s", (DateTime.Now - startTime).TotalSeconds);
 
             ratingLookup.Sort(new RatingDAOComparer());
             episodeLookup.Sort(new EpisodeDAOComparer());
             titles.Sort(new TitleComparer());
 
-            Console.WriteLine("Reading episodes...");
+            Console.WriteLine("Reading episodes... {0}s", (DateTime.Now - startTime).TotalSeconds);
 
             while (!tsvReader.EndOfStream)
             {
@@ -184,14 +185,14 @@ public class TaskRunnerService : ITaskRunnerService
                 }
             }
 
-            Console.WriteLine("Removing wrong datasets...");
+            Console.WriteLine("Removing wrong datasets... {0}s", (DateTime.Now - startTime).TotalSeconds);
 
             titles.RemoveAll(t => t.Episodes != null && t.Episodes.All(e => e.Rating == 0 || e.Rating == null));
             titles.RemoveAll(t => t.Episodes != null && t.Episodes.All(e => e.EpisodeNumber == -1 && e.SeasonNumber == -1));
             titles.RemoveAll(t => t.Episodes == null);
             episodes.RemoveAll(e => titles.BinarySearch(new Title() { Tconst = e.TitleTconst }, new TitleComparer()) < 0);
 
-            Console.WriteLine("Inserting titles & episodes...");
+            Console.WriteLine("Inserting titles & episodes... {0}s", (DateTime.Now - startTime).TotalSeconds);
 
             _context.Episodes.BatchDelete();
             _context.Titles.BatchDelete();
@@ -200,23 +201,30 @@ public class TaskRunnerService : ITaskRunnerService
             _context.BulkInsert(episodes);
             _context.BulkSaveChanges();
 
-            Console.WriteLine("Writing Search Index");
+            Console.WriteLine("Writing Search Index... {0}s", (DateTime.Now - startTime).TotalSeconds);
 
-            using (var ingest = NSonicFactory.Ingest(SonicHost, SonicPort, SonicSecret))
+            try
             {
-                ingest.Connect();
-
-                var flushCollectionResult = ingest.FlushCollection("titles");
-                Console.WriteLine($"Flush of all titles: {flushCollectionResult}");
-
-                foreach (var title in titles)
+                using (var ingest = NSonicFactory.Ingest(SonicHost, SonicPort, SonicSecret))
                 {
-                    ingest.Push("titles", "generic", title.Tconst, title.PrimaryTitle.Replace("\"", "'"));
+                    ingest.Connect();
+
+                    var flushCollectionResult = ingest.FlushCollection("titles");
+                    Console.WriteLine($"Flush of all titles: {flushCollectionResult}");
+
+                    foreach (var title in titles)
+                    {
+                        ingest.Push("titles", "generic", title.Tconst, title.PrimaryTitle.Replace("\"", "'"));
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
 
 
-            Console.WriteLine("Done.");
+            Console.WriteLine("Retrieving additional Informations... {0}s", (DateTime.Now - startTime).TotalSeconds);
 
             var thisYear = DateTime.Now.Year;
             var avgVotesTitles = _context.Titles
@@ -245,54 +253,64 @@ public class TaskRunnerService : ITaskRunnerService
             }
 
             _context.SaveChanges();
+
+            Console.WriteLine("Done. {0}s", (DateTime.Now - startTime).TotalSeconds);
         }
     }
 
     private AdditionalInfo? retrieveAdditionalInfo(string tconst)
     {
-        var api_key = _configuration.GetValue<string>("ConnectionStrings:IMDB-API-Key");
-
         using (WebClient webClient = new WebClient())
         {
-            var json = webClient.DownloadString($"https://imdb-api.com/en/API/Title/{api_key}/{tconst}");
-            var additionalInfoJson = JsonSerializer.Deserialize<AdditionalInfoJSON>(json);
-
-            if (additionalInfoJson.errorMessage != null)
+            try
             {
-                Debug.WriteLine(additionalInfoJson.errorMessage);
+                var json = webClient.DownloadString($"https://imdb-api.projects.thetuhin.com/title/{tconst}");
+
+
+                var additionalInfoJson = JsonSerializer.Deserialize<AdditionalInfoJSON>(json);
+
+                if (additionalInfoJson.errorMessage != null)
+                {
+                    Debug.WriteLine(additionalInfoJson.errorMessage);
+                    return null;
+                }
+
+                AdditionalInfo additionalInfo = new AdditionalInfo();
+                additionalInfo.Title = _context.Titles.FirstOrDefault(t => t.Tconst == tconst);
+                additionalInfo.Plot = additionalInfoJson.plot;
+                additionalInfo.ImageURL = additionalInfoJson.image;
+                additionalInfo.Keywords = additionalInfoJson.keywords;
+                if (additionalInfoJson.releaseDetailed.originLocations.Length > 0)
+                {
+                    ICountryProvider countryProvider = new CountryProvider();
+                    var countryName = additionalInfoJson.releaseDetailed.originLocations[0].cca2;
+
+                    var specialCases = new Dictionary<string, string>();
+                    specialCases.Add("USA", "United States of America");
+                    specialCases.Add("UK", "United Kingdom");
+
+                    if (specialCases.ContainsKey(countryName))
+                    {
+                        countryName = specialCases[countryName];
+                    }
+
+                    try
+                    {
+                        var countryInfo = countryProvider.GetCountryByName(countryName);
+                        additionalInfo.Country = countryInfo.Alpha2Code.ToString();
+                    }
+                    catch (Exception)
+                    {
+                        additionalInfo.Country = "";
+                    }
+                }
+                return additionalInfo;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
                 return null;
             }
-
-            AdditionalInfo additionalInfo = new AdditionalInfo();
-            additionalInfo.Title = _context.Titles.FirstOrDefault(t => t.Tconst == tconst);
-            additionalInfo.Plot = additionalInfoJson.plot;
-            additionalInfo.ImageURL = additionalInfoJson.image;
-            additionalInfo.Keywords = additionalInfoJson.keywords;
-            if (additionalInfoJson.countryList.Length > 0)
-            {
-                ICountryProvider countryProvider = new CountryProvider();
-                var countryName = additionalInfoJson.countryList[0].value;
-
-                var specialCases = new Dictionary<string, string>();
-                specialCases.Add("USA", "United States of America");
-                specialCases.Add("UK", "United Kingdom");
-
-                if (specialCases.ContainsKey(countryName))
-                {
-                    countryName = specialCases[countryName];
-                }
-
-                try
-                {
-                    var countryInfo = countryProvider.GetCountryByName(countryName);
-                    additionalInfo.Country = countryInfo.Alpha2Code.ToString();
-                }
-                catch (Exception)
-                {
-                    additionalInfo.Country = "";
-                }
-            }
-            return additionalInfo;
         }
     }
 }
@@ -302,9 +320,29 @@ class AdditionalInfoJSON
     public string plot { get; set; }
     public string image { get; set; }
     public string keywords { get; set; }
-    public CountryListKeyValue[] countryList { get; set; }
+    public ReleaseDetailed releaseDetailed { get; set; }
 
     public string errorMessage { get; set; }
+}
+
+public class ReleaseDetailed
+{
+    public int day { get; set; }
+
+    public int month { get; set; }
+
+    public int year { get; set; }
+
+    public CountryLocation releaseLocation { get; set; }
+
+    public CountryLocation[] originLocations { get; set; }
+}
+
+public class CountryLocation
+{
+    public string country { get; set; }
+
+    public string cca2 { get; set; }
 }
 
 class CountryListKeyValue
