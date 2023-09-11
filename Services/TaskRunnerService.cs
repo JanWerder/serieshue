@@ -242,7 +242,11 @@ public class TaskRunnerService : ITaskRunnerService
 
             for (int i = 0; i < 25; i++)
             {
-                var title = topTitles[i];
+                if (topTitles.ElementAtOrDefault(i) == null)
+                {
+                    break;
+                }
+                var title = topTitles.ElementAtOrDefault(i);
                 var additionalInfo = _context.AdditionalInfos.FirstOrDefault(ai => ai.Title.Tconst == title.Tconst);
                 if (additionalInfo == null)
                 {
