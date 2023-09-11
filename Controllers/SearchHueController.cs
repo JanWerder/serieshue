@@ -42,6 +42,7 @@ namespace serieshue.Controllers
         [HttpGet("/api/search")]
         public ActionResult<IEnumerable<TitleDTO>> Search([FromQuery] string query)
         {
+            try{
             using (var search = NSonicFactory.Search(SonicHost, SonicPort, SonicSecret))
             {
                 search.Connect();
@@ -56,6 +57,10 @@ namespace serieshue.Controllers
                 .ToList();
                 var titlesDTO = titles.Select(t => new TitleDTO(t)).ToList();
                 return titlesDTO;
+            }
+            }catch(Exception e){
+                Console.WriteLine(e.GetType().ToString() + ": " + e.Message);
+                return null;
             }
         }
 

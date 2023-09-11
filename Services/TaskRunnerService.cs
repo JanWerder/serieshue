@@ -284,7 +284,6 @@ public class TaskRunnerService : ITaskRunnerService
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
                 return null;
             }
         }
