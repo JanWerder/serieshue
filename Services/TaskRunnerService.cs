@@ -237,8 +237,9 @@ public class TaskRunnerService : ITaskRunnerService
             .Where(t => t.StartYear == thisYear)
             .OrderByDescending(t => t.Rating)
             .Where(t => t.Votes > avgVotesTitles)
-            .Where(t => !_context.AdditionalInfos.All(ai => ai.Title.Tconst == t.Tconst))
             .ToList();
+            
+            topTitles.RemoveAll(t => _context.AdditionalInfos.FirstOrDefault(ai => ai.Title.Tconst == t.Tconst) != null);
 
             for (int i = 0; i < 25; i++)
             {
